@@ -2,153 +2,149 @@
 
 # 🍏 iOS Windows to App Store Connect CI/CD
 
-**Compilação, Assinatura e Publicação 100% Automatizada de Apps iOS diretamente do Windows para o App Store Connect via GitHub Actions.**
+**100% Automated iOS App Compilation, Signing, and App Store Connect Deployment directly from Windows via GitHub Actions.**
+
+<p align="center">
+  <a href="README.md"><b>English 🇺🇸</b></a> •
+  <a href="README.pt-BR.md"><b>Português 🇧🇷</b></a> •
+  <a href="README.es.md"><b>Español 🇪🇸</b></a>
+</p>
 
 [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-macOS--15-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
 [![Xcode](https://img.shields.io/badge/Xcode-Latest_GA-147EFB?style=for-the-badge&logo=xcode&logoColor=white)](https://developer.apple.com/xcode/)
 [![iOS](https://img.shields.io/badge/iOS-16.0+-000000?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-*Sem Mac físico. Sem hackintosh. Sem mensalidades caras de serviços terceiros.*
+*No physical Mac required. No Hackintosh. No expensive third-party subscription builders.*
 
 </div>
 
 ---
 
-## 📖 Sobre o Projeto
+## 📖 About The Project
 
-Desenvolver e publicar um aplicativo para a **Apple App Store** a partir de um computador **Windows** sempre foi um dos maiores desafios para desenvolvedores e empresas. 
+Developing and publishing iOS applications to the **Apple App Store** from a **Windows machine** has historically been a significant bottleneck for independent developers and teams.
 
-Este projeto fornece um **kit completo de automação e modelo de CI/CD** baseado em **GitHub Actions** (usando runners oficiais `macos-15`), permitindo que qualquer desenvolvedor no Windows consiga:
-1. Gerar certificados e chaves de assinatura da Apple (CSR, RSA 2048-bit, `.p12`) nativamente no Windows.
-2. Compilar binários nativos Swift/iOS para dispositivos físicos (`arm64`).
-3. Gerar asset catalogs (`Assets.car`) e ícones 100% RGB sem canal alfa em conformidade com as regras da Apple.
-4. Assinar digitalmente o aplicativo com *Distribution Certificate* e *Provisioning Profile*.
-5. Fazer o upload automático para o **App Store Connect / TestFlight** através do `xcrun altool`.
+This project delivers a **production-ready CI/CD template and automation toolkit** powered by **GitHub Actions** (`macos-15` runners), allowing developers on Windows to:
+1. Generate Apple signing keys (CSR, 2048-bit RSA, `.p12`) natively on Windows using OpenSSL.
+2. Compile native Swift/iOS binaries for physical devices (`arm64`).
+3. Generate App Store compliant RGB icon assets without alpha channels.
+4. Codesign apps with official *Distribution Certificates* and *Provisioning Profiles*.
+5. Upload `.ipa` packages directly to **App Store Connect / TestFlight** using `xcrun altool`.
 
 ---
 
-## 🏗️ Fluxo e Arquitetura
+## 🏗️ Architecture & Workflow
 
 ```mermaid
 flowchart TD
-    subgraph Local [Ambiente Windows Local]
-        A[Desenvolvedor no Windows] -->|1. Executa setup script| B[OpenSSL: Gera Chave RSA & CSR]
+    subgraph Local [Local Windows Environment]
+        A[Windows Developer] -->|1. Run setup script| B[OpenSSL: Generate RSA & CSR]
         B -->|2. Upload CSR| C[Apple Developer Portal]
-        C -->|3. Baixa .cer & .mobileprovision| A
-        A -->|4. Converte para .p12 & Base64| D[GitHub CLI / Secrets]
+        C -->|3. Download .cer & .mobileprovision| A
+        A -->|4. Export .p12 & Base64 encode| D[GitHub CLI / Secrets]
     end
 
-    subgraph CI_CD [GitHub Actions Cloud: Runner macos-15]
-        D -->|5. Git Push aciona Workflow| E[Runner macOS Inicializado]
-        E -->|6. Detecta Dinamicamente Latest GA Xcode| F[Compilação arm64 Swift]
-        F -->|7. Gera Ícones RGB & Compila Assets.car| G[Injeta Chaves no Keychain]
-        G -->|8. Codesign com Entitlements & .p12| H[Empacotamento do IPA]
-        H -->|9. Upload via xcrun altool com API Key| I[App Store Connect / TestFlight]
+    subgraph CI_CD [GitHub Actions Cloud: macOS-15 Runner]
+        D -->|5. Git Push triggers Workflow| E[Initialize macOS Runner]
+        E -->|6. Dynamically select latest GA Xcode| F[Swift / arm64 Compilation]
+        F -->|7. Generate RGB icons & actool compile| G[Import .p12 into ephemeral keychain]
+        G -->|8. Codesign with Entitlements| H[Package IPA]
+        H -->|9. Upload via xcrun altool with API Key| I[App Store Connect / TestFlight]
     end
 
     subgraph Apple [Apple Ecosystem]
-        I -->|10. Processamento Automático| J[🟢 Submetido para Revisão / TestFlight]
+        I -->|10. Automated Ingestion & Processing| J[🟢 Ready for Review / TestFlight]
     end
 ```
 
 ---
 
-## 🚀 Como Usar em 5 Minutos
+## 🚀 Quick Start (5 Minutes)
 
-### 1. Clonar ou copiar este repositório
-Copie a pasta `.github/workflows/build-ios-appstore.yml` e `scripts/` para o repositório do seu projeto.
+### 1. Copy Files to Your Repository
+Copy the `.github/workflows/build-ios-appstore.yml` and `scripts/` directories into your project repository.
 
-### 2. Executar o Script de Automação no Windows (PowerShell)
-Abra o PowerShell na pasta do projeto e execute:
+### 2. Run the Interactive Windows PowerShell Wizard
+Open PowerShell in your project root and execute:
 
 ```powershell
 .\scripts\setup-ios-appstore-cicd.ps1
 ```
 
-O script interativo irá:
-* Gerar sua chave privada RSA e o arquivo de requisição `CertificateSigningRequest.certSigningRequest`.
-* Guiar o download do certificado `distribution.cer` e perfil `.mobileprovision` no portal da Apple.
-* Exportar o certificado `.p12` protegido por senha.
-* Codificar tudo em Base64 e configurar automaticamente todas as 6 secrets no seu GitHub!
+The script will:
+* Generate your RSA private key and `CertificateSigningRequest.certSigningRequest`.
+* Guide you to download the `distribution.cer` and `.mobileprovision` from Apple Developer Portal.
+* Package the password-protected `.p12` certificate.
+* Base64 encode everything and register all 6 required secrets into your GitHub repository via GitHub CLI (`gh`).
 
 ---
 
-## 🔐 GitHub Secrets Necessárias
+## 🔐 Required GitHub Secrets
 
-Se preferir configurar manualmente em **Settings > Secrets and variables > Actions**:
+If you prefer configuring secrets manually under **Settings > Secrets and variables > Actions**:
 
-| Nome da Secret | Descrição | Como Obter no Windows |
+| Secret Name | Description | How to obtain on Windows |
 |---|---|---|
-| `P12_CERTIFICATE_BASE64` | Certificado de Distribuição `.p12` em Base64 | `[Convert]::ToBase64String([IO.File]::ReadAllBytes("distribution.p12"))` |
-| `P12_PASSWORD` | Senha definida na criação do arquivo `.p12` | Texto simples da senha |
-| `PROVISIONING_PROFILE_BASE64` | Perfil de Provisionamento `.mobileprovision` em Base64 | `[Convert]::ToBase64String([IO.File]::ReadAllBytes("SeuApp.mobileprovision"))` |
-| `APP_STORE_CONNECT_PRIVATE_KEY` | Conteúdo da chave de API (`AuthKey_XXXX.p8`) | Conteúdo completo do arquivo `.p8` |
-| `APP_STORE_CONNECT_KEY_ID` | Key ID da API App Store Connect | Ex: `AB12CD34EF` (10 caracteres) |
-| `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID da API App Store Connect | Ex: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` (UUID) |
+| `P12_CERTIFICATE_BASE64` | Distribution `.p12` certificate encoded in Base64 | `[Convert]::ToBase64String([IO.File]::ReadAllBytes("distribution.p12"))` |
+| `P12_PASSWORD` | Password set during `.p12` export | Plain text password |
+| `PROVISIONING_PROFILE_BASE64` | `.mobileprovision` profile encoded in Base64 | `[Convert]::ToBase64String([IO.File]::ReadAllBytes("YourApp.mobileprovision"))` |
+| `APP_STORE_CONNECT_PRIVATE_KEY` | App Store Connect API Key (`AuthKey_XXXX.p8`) | Full text including `-----BEGIN PRIVATE KEY-----` |
+| `APP_STORE_CONNECT_KEY_ID` | App Store Connect Key ID | Ex: `AB12CD34EF` (10 characters) |
+| `APP_STORE_CONNECT_ISSUER_ID` | App Store Connect Issuer ID | Ex: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` (UUID) |
 
 ---
 
-## 📁 Estrutura de Arquivos Recomendada
+## 📁 Repository Structure
 
 ```text
 ├── .github/
 │   └── workflows/
-│       └── build-ios-appstore.yml       # Workflow completo de CI/CD para macOS
+│       └── build-ios-appstore.yml       # Production-ready CI/CD macOS workflow
 ├── ios/
-│   └── SeuApp/
-│       ├── Info.plist                   # Metadados do App (CarPlay, Permissões, etc.)
-│       ├── Package.swift                # Gerenciador de Pacotes Swift (ou .xcodeproj)
+│   └── YourApp/
+│       ├── Info.plist                   # App Metadata (CarPlay, Permissions, etc.)
+│       ├── Package.swift                # Swift Package (or .xcodeproj)
 │       ├── Resources/
-│       │   └── client_launcher.png      # Imagem base de 1024x1024 para ícones
+│       │   └── client_launcher.png      # 1024x1024 base icon asset
 │       └── Sources/
 │           └── App/
-│               └── SeuAppMain.swift     # Código-fonte da aplicação
+│               └── AppMain.swift        # Application source code
 └── scripts/
-    ├── setup-ios-appstore-cicd.ps1      # Assistente de configuração (Windows PowerShell)
-    └── setup-ios-appstore-cicd.sh       # Assistente de configuração (Linux / macOS / WSL)
+    ├── setup-ios-appstore-cicd.ps1      # Interactive setup wizard (Windows PowerShell)
+    └── setup-ios-appstore-cicd.sh       # Interactive setup wizard (Linux / macOS / WSL)
 ```
 
 ---
 
-## ⚙️ Principais Funcionalidades do Workflow
+## ⚙️ Workflow Key Highlights
 
-- ✅ **Detecção Dinâmica do Xcode GA**: Busca automaticamente a versão estável mais recente do Xcode instalada no runner macOS (`macos-15`), evitando incompatibilidades de versão beta da Apple.
-- ✅ **Tratamento Automático de Ícones**: Gera ícones em todas as resoluções necessárias (120x120, 180x180, 152x152, 167x167, 1024x1024) com fundo RGB opaco (sem canal alpha) para cumprir as regras estritas da App Store.
-- ✅ **Extração Dinâmica de Entitlements**: Decodifica o perfil `.mobileprovision` e extrai as permissões e entitlements oficiais antes da assinatura.
-- ✅ **Keychain Efêmero Seguro**: Cria e destrói uma keychain temporária protegida no runner para importar o `.p12` e assinar com `codesign`.
-- ✅ **Upload Direto sem Transporter GUI**: Utiliza a ferramenta oficial de linha de comando `xcrun altool` autenticada via chave privada `.p8`.
-
----
-
-## 📝 Checklist de Submissão no App Store Connect
-
-Antes de clicar em **Adicionar para Revisão (*Add for Review*)**:
-- [ ] **Categoria Primária**: Definida em *Informações do App* (ex: Entretenimento ou Utilitários).
-- [ ] **Direitos de Conteúdo**: Marcado como *Não*.
-- [ ] **Classificação Indicativa (Age Rating)**: Questionário preenchido.
-- [ ] **Privacidade do App**: Práticas e dados declarados.
-- [ ] **Criptografia**: Certifique-se de que o `Info.plist` possui `<key>ITSAppUsesNonExemptEncryption</key><false/>`.
-- [ ] **Screenshots**: Faça upload dos tamanhos obrigatórios (6.5" Display, 5.5" Display e iPad se aplicável).
+- ✅ **Dynamic GA Xcode Detection**: Automatically discovers and selects the latest General Availability (GA) Xcode release installed on the runner (`macos-15`), avoiding Apple beta rejection errors.
+- ✅ **Automated Icon Processing**: Compiles 100% opaque RGB PNG icons (120x120, 180x180, 152x152, 167x167, 1024x1024) with zero alpha channels using Pillow to satisfy strict App Store validation.
+- ✅ **Dynamic Entitlements Extraction**: Extracts clean XML entitlements directly from the `.mobileprovision` file before codesigning.
+- ✅ **Ephemeral Secure Keychain**: Provisions and cleans up a temporary macOS keychain for secure codesigning.
+- ✅ **Native Command-Line Upload**: Leverages official `xcrun altool` authenticated with `.p8` private keys without requiring GUI Transporter tools.
 
 ---
 
-## 🤝 Contribuições
+## 📝 App Store Connect Submission Checklist
 
-Contribuições são super bem-vindas! Sinta-se livre para abrir uma **Issue** ou enviar um **Pull Request**.
-
-1. Faça um Fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/minha-melhoria`)
-3. Faça commit das suas alterações (`git commit -m 'feat: adiciona nova funcionalidade'`)
-4. Envie para o branch (`git push origin feature/minha-melhoria`)
-5. Abra um Pull Request
+Before clicking **Add for Review**:
+- [ ] **Primary Category**: Configured in *App Information* (e.g., Entertainment / Utilities).
+- [ ] **Content Rights**: Set to *No*.
+- [ ] **Age Rating**: Completed questionnaire (e.g., 4+).
+- [ ] **App Privacy**: Data practices declared.
+- [ ] **Encryption Exemption**: Ensure `<key>ITSAppUsesNonExemptEncryption</key><false/>` is in `Info.plist`.
+- [ ] **Screenshots**: Upload required 6.5", 5.5", and iPad displays.
 
 ---
 
-## 📄 Licença
+## 🤝 Contributing
 
-Distribuído sob a licença **MIT**. Consulte o arquivo [LICENSE](LICENSE) para obter mais informações.
+Contributions are warmly welcomed! Feel free to open an **Issue** or submit a **Pull Request**.
 
-<div align="center">
-Desenvolvido com dedicação para a comunidade open-source. 🚀
-</div>
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
