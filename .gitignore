@@ -1,0 +1,20 @@
+# Certificados e Chaves Privadas Sensíveis
+*.p12
+*.cer
+*.key
+*.pem
+*.p8
+*.mobileprovision
+*.certSigningRequest
+apple_certificates_temp/
+scripts/apple_certificates_temp/
+
+# Build outputs
+build/
+Payload/
+*.ipa
+*.app
+
+# Arquivos de Sistema
+.DS_Store
+Thumbs.db
